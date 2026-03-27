@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitoramento Inteligente | SENAI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <nav class="navbar">
+            <div class="brand-area">
+                <img src="{{ url_for('static', filename='senai_logo.png') }}" alt="SENAI" class="inst-logo">
+                <div class="main-title">Monitoramento Inteligente de Corredores</div>
+            </div>
+            <form action="/" method="POST" enctype="multipart/form-data" id="upload-form">
+                <label for="video_file" class="custom-upload"><i class="fas fa-file-import"></i> IMPORTAR VÍDEO</label>
+                <input type="file" name="video_file" id="video_file" onchange="document.getElementById('upload-form').submit()">
+            </form>
+        </nav>
+
+        <div class="main-content">
+            <aside class="toolbar">
+                <div class="tool-btn active"><i class="fas fa-microchip"></i></div>
+                <div class="tool-btn"><i class="fas fa-chart-line"></i></div>
+                <div class="tool-spacer"></div>
+                <div class="tool-btn"><i class="fas fa-envelope"></i></div>
+            </aside>
+
+            <section class="workspace">
+                {% if tem_video %}
+                    <img src="{{ url_for('video_feed') }}" class="main-stream">
+                    <div class="processing-badge"><div class="spinner"></div> PROCESSANDO...</div>
+                {% else %}
+                    <div class="drop-zone"><i class="fas fa-video"></i><p>Aguardando upload para processamento...</p></div>
+                {% endif %}
+            </section>
+
+            <aside class="data-panel">
+                <div class="panel-header">DETECÇÕES EM TEMPO REAL</div>
+                <div class="labels-container">
+                    {% for item in dados %}
+                    <div class="label-card {{ 'run' if item.status == 'CORRENDO' else 'walk' }}">
+                        <span class="id-tag">ID #{{ item.id }}</span>
+                        <span class="speed-tag">{{ item.vel }} m/s</span>
+                        <span class="status-tag">{{ item.status }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="preview-section">
+                    <div class="panel-header">PREVIEW DA ÚLTIMA ANÁLISE</div>
+                    <video controls class="video-preview">
+                        <source src="{{ url_for('static', filename='ultima_analise.mp4') }}?v={{ range(1, 9999) | random }}" type="video/mp4">
+                    </video>
+                    <a href="/download_video" class="export-btn download-video"><i class="fas fa-download"></i> BAIXAR VÍDEO</a>
+                </div>
+            </aside>
+        </div>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span><i class="fas fa-user-code"></i> Desenvolvido por: <b>Daniel Oliveira Kirmse</b></span>
+                <div class="footer-links">
+                    <a href="https://github.com/daniel-oliveira-kirmse/analise-corredor-yolo" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="mailto:seuemail@exemplo.com"><i class="fas fa-envelope"></i> Contato</a>
+                </div>
+                <span class="tech-stack">Python | Flask | YOLOv8</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        setInterval(() => {
+            fetch('/').then(r => r.text()).then(h => {
+                let doc = new DOMParser().parseFromString(h, 'text/html');
+                document.querySelector('.labels-container').innerHTML = doc.querySelector('.labels-container').innerHTML;
+            });
+        }, 3000);
+    </script>
+</body>
+</html>
