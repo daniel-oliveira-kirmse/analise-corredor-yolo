@@ -38,7 +38,8 @@ def gerar_frames(caminho_video):
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     
     output_path = os.path.join('static', 'ultima_analise.mp4')
-    fourcc = cv2.VideoWriter_fourcc(*'avc1') 
+    # Usando mp4v em vez de avc1 para maior compatibilidade em servidores Linux
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
 
     linha_A_y, linha_B_y = int(h * 0.35), int(h * 0.85)
@@ -51,10 +52,9 @@ def gerar_frames(caminho_video):
         frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
         results = model.track(frame, persist=True, verbose=False)
         
-        # Desenha as linhas e o plot do YOLO ANTES de gravar no 'out'
         cv2.line(frame, (0, linha_A_y), (w, linha_A_y), (255, 255, 0), 2)
         cv2.line(frame, (0, linha_B_y), (w, linha_B_y), (0, 0, 255), 2)
-        frame = results[0].plot() 
+        frame = results[0].plot()
 
         if results[0].boxes.id is not None:
             ids = results[0].boxes.id.cpu().numpy().astype(int)
@@ -103,4 +103,6 @@ def download_video():
     return send_from_directory('static', "ultima_analise.mp4", as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Produção: lê a porta do ambiente (necessário para Render/Railway/etc.)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
